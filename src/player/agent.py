@@ -15,7 +15,7 @@ if TYPE_CHECKING:
     from aiwolf_nlp_common.protocol.setting import Setting
     from aiwolf_nlp_common.role import Role
 
-    from utils.agent_log import AgentLog
+    from utils.agent_log import AgentLogger
 
 import random
 from threading import Thread
@@ -31,7 +31,7 @@ class Agent:
         self,
         config: configparser.ConfigParser | None = None,
         name: str | None = None,
-        agent_log: AgentLog | None = None,
+        agent_logger: AgentLogger | None = None,
     ) -> None:
         self.name: str = name if name is not None else ""
         self.index: int = -1
@@ -44,7 +44,7 @@ class Agent:
         self.setting: Setting | None = None
         self.talk_history: TalkList | None = None
         self.whisper_history: WhisperList | None = None
-        self.agent_log = agent_log
+        self.agent_logger = agent_logger
         self.alive_agents: list[str] = []
         self.running: bool = True
         if config is not None:
@@ -81,7 +81,19 @@ class Agent:
         return _wrapper
 
     @staticmethod
-    def send_agent_index(func: Callable) -> Callable:
+    def logging(func: Callable) -> Callable:
+        def _wrapper(self, *args, **kwargs) -> None:  # noqa: ANN001, ANN002, ANN003
+            if self.agent_logger is not None:
+                self.agent_logger.info("Called %s", func.__name__)
+            res = func(self, *args, **kwargs)
+            if self.agent_logger is not None:
+                self.agent_logger.info("Return %s", res)
+            return res
+
+        return _wrapper
+
+    @staticmethod
+    def send_agent_idx(func: Callable) -> Callable:
         def _wrapper(self, *args, **kwargs) -> str:  # noqa: ANN001, ANN002, ANN003
             res = func(self, *args, **kwargs)
             if type(res) is not int:
@@ -105,6 +117,7 @@ class Agent:
         else:
             self.packet.update(value=value)
 
+    @logging
     def initialize(self) -> None:
         if self.packet is not None:
             self.info = self.packet.info
@@ -116,6 +129,7 @@ class Agent:
         self.action_timeout = self.setting.action_timeout
         self.role = self.info.role_map.get_role(agent=self.info.agent)
 
+    @logging
     def daily_initialize(self) -> None:
         if self.packet is not None:
             self.info = self.packet.info
@@ -125,6 +139,7 @@ class Agent:
             return
         self.alive_agents = self.info.status_map.get_alive_agent_list()
 
+    @logging
     def daily_finish(self) -> None:
         if self.packet is not None:
             if self.talk_history is None:
@@ -137,14 +152,17 @@ class Agent:
                 self.whisper_history.extend(self.packet.whisper_history)
 
     @timeout
+    @logging
     def get_name(self) -> str:
         return self.name
 
     @timeout
+    @logging
     def get_role(self) -> Role:
         return self.role
 
     @timeout
+    @logging
     def talk(self) -> str:
         if self.packet is not None:
             if self.talk_history is None:
@@ -152,22 +170,19 @@ class Agent:
             elif self.packet.talk_history is not None:
                 self.talk_history.extend(self.packet.talk_history)
 
-        comment = random.choice(self.comments)  # noqa: S311
-        if self.agent_log is not None:
-            self.agent_log.talk(comment=comment)
-        return comment
+        return random.choice(self.comments)  # noqa: S311
 
     @timeout
-    @send_agent_index
+    @logging
+    @send_agent_idx
     def vote(self) -> int:
         target: int = agent_util.agent_name_to_idx(
             name=random.choice(self.alive_agents),  # noqa: S311
         )
-        if self.agent_log is not None:
-            self.agent_log.vote(vote_target=target)
         return target
 
     @timeout
+    @logging
     def whisper(self) -> None:
         if self.packet is not None:
             if self.whisper_history is None:
@@ -175,13 +190,11 @@ class Agent:
             elif self.packet.whisper_history is not None:
                 self.whisper_history.extend(self.packet.whisper_history)
 
+    @logging
     def finish(self) -> None:
         if self.packet is not None:
             self.info = self.packet.info
         self.running = False
-
-        if self.agent_log is not None and self.agent_log.is_write:
-            self.agent_log.close()
 
     def action(self) -> str:  # noqa: C901
         if self.packet is None:
@@ -218,6 +231,6 @@ class Agent:
         self.setting = prev_agent.setting
         self.talk_history = prev_agent.talk_history
         self.whisper_history = prev_agent.whisper_history
-        self.agent_log = prev_agent.agent_log
+        self.agent_logger = prev_agent.agent_logger
         self.alive_agents = prev_agent.alive_agents
         self.running = prev_agent.running

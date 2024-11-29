@@ -4,7 +4,6 @@ import multiprocessing
 from pathlib import Path
 
 import main
-from utils.log_info import LogInfo
 
 logger = logging.getLogger(__name__)
 handler = logging.StreamHandler()
@@ -24,7 +23,6 @@ if __name__ == "__main__":
         logger.info("設定ファイルを読み込みました")
     else:
         raise FileNotFoundError(config_path, "設定ファイルが見つかりません")
-    log_info = LogInfo()
 
     agent_num = int(config.get("agent", "num"))
     logger.info("エージェント数: %d", agent_num)
@@ -37,7 +35,6 @@ if __name__ == "__main__":
             args=(
                 i + 1,
                 config,
-                log_info,
             ),
         )
         processes.append(process)
