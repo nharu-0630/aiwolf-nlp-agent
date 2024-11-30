@@ -16,5 +16,5 @@ name4 = kanolab4
 name5 = kanolab5
 
 [path]
-log_config = ./res/log.ini
-random_talk = ./res/2019071_44011_AIWolfTalkLogs.txt
+output_dir = ./../log
+random_talk = ./configs/2019071_44011_AIWolfTalkLogs.txt

@@ -15,7 +15,7 @@ if TYPE_CHECKING:
     from aiwolf_nlp_common.protocol.setting import Setting
     from aiwolf_nlp_common.role import Role
 
-    from utils.agent_log import AgentLogger
+    from utils.agent_logger import AgentLogger
 
 import random
 from threading import Thread
@@ -33,11 +33,11 @@ class Agent:
         name: str | None = None,
         agent_logger: AgentLogger | None = None,
     ) -> None:
-        self.name: str = name if name is not None else ""
+        self.agent_name: str = name if name is not None else ""
         self.index: int = -1
         self.received: list[str] = []
         self.comments: list[str] = []
-        self.role: Role = RoleInfo.VILLAGER.value
+        self.agent_role: Role = RoleInfo.VILLAGER.value
         self.action_timeout: int = 0
         self.packet: Packet | None = None
         self.info: Info | None = None
@@ -127,7 +127,7 @@ class Agent:
             return
         self.index = agent_util.agent_name_to_idx(name=self.info.agent)
         self.action_timeout = self.setting.action_timeout
-        self.role = self.info.role_map.get_role(agent=self.info.agent)
+        self.agent_role = self.info.role_map.get_role(agent=self.info.agent)
 
     @logging
     def daily_initialize(self) -> None:
@@ -153,13 +153,13 @@ class Agent:
 
     @timeout
     @logging
-    def get_name(self) -> str:
-        return self.name
+    def name(self) -> str:
+        return self.agent_name
 
     @timeout
     @logging
-    def get_role(self) -> Role:
-        return self.role
+    def role(self) -> Role:
+        return self.agent_role
 
     @timeout
     @logging
@@ -202,9 +202,9 @@ class Agent:
         if Action.is_initialize(request=self.packet.request):
             self.initialize()
         elif Action.is_name(request=self.packet.request):
-            return self.get_name()
+            return self.name()
         elif Action.is_role(request=self.packet.request):
-            return self.get_role()
+            return self.role()
         elif Action.is_daily_initialize(request=self.packet.request):
             self.daily_initialize()
         elif Action.is_daily_finish(request=self.packet.request):
@@ -220,11 +220,11 @@ class Agent:
         return ""
 
     def transfer_state(self, prev_agent: Agent) -> None:
-        self.name = prev_agent.name
+        self.agent_name = prev_agent.agent_name
         self.index = prev_agent.index
         self.received = prev_agent.received
         self.comments = prev_agent.comments
-        self.role = prev_agent.role
+        self.agent_role = prev_agent.agent_role
         self.action_timeout = prev_agent.action_timeout
         self.packet = prev_agent.packet
         self.info = prev_agent.info

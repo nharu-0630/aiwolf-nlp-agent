@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 
 from ulid import ULID
 
-from utils.agent_log import AgentLogger
+from utils.agent_logger import AgentLogger
 
 if TYPE_CHECKING:
     from configparser import ConfigParser
@@ -19,7 +19,7 @@ from time import sleep
 from aiwolf_nlp_common import Action
 from aiwolf_nlp_common.client.websocket import WebSocketClient
 
-import player
+import core
 import utils
 
 logger = logging.getLogger(__name__)
@@ -50,7 +50,7 @@ def run_agent(
             logger.info("再接続を試みます")
             sleep(15)
 
-    agent = player.agent.Agent(
+    agent = core.agent.Agent(
         config=config,
         name=name,
         agent_logger=AgentLogger(
@@ -95,7 +95,7 @@ def execute(
 
 
 if __name__ == "__main__":
-    config_path = "./res/config.ini"
+    config_path = "./configs/config.ini"
     if Path(config_path).exists():
         config = configparser.ConfigParser()
         config.read(config_path)

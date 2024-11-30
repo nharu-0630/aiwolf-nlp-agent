@@ -4,7 +4,7 @@ import random
 
 from aiwolf_nlp_common import Action
 
-from player.agent import Agent
+from core.agent import Agent
 from utils import agent_util
 
 

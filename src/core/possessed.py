@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from player.agent import Agent
+from core.agent import Agent
 
 
 class Possessed(Agent):

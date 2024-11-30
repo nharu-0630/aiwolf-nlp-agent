@@ -19,6 +19,6 @@ class AgentLogger(Logger):
             encoding="utf-8",
         )
         self.handler.setFormatter(
-            logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+            logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s"),
         )
         super().addHandler(self.handler)
