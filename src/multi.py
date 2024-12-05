@@ -16,7 +16,7 @@ logger.setLevel(logging.INFO)
 if __name__ == "__main__":
     multiprocessing.set_start_method("spawn")
 
-    config_path = "./configs/config.ini"
+    config_path = "./src/configs/config.ini"
     if Path(config_path).exists():
         config = configparser.ConfigParser()
         config.read(config_path)

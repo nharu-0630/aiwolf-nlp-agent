@@ -95,7 +95,7 @@ def execute(
 
 
 if __name__ == "__main__":
-    config_path = "./configs/config.ini"
+    config_path = "./src/configs/config.ini"
     if Path(config_path).exists():
         config = configparser.ConfigParser()
         config.read(config_path)

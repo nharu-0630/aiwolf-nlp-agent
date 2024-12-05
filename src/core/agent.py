@@ -10,8 +10,6 @@ if TYPE_CHECKING:
     import configparser
 
     from aiwolf_nlp_common.protocol.info import Info
-    from aiwolf_nlp_common.protocol.list.talk_list import TalkList
-    from aiwolf_nlp_common.protocol.list.whisper_list import WhisperList
     from aiwolf_nlp_common.protocol.setting import Setting
     from aiwolf_nlp_common.role import Role
 
@@ -23,6 +21,8 @@ from typing import Callable
 
 from aiwolf_nlp_common import Action
 from aiwolf_nlp_common.protocol import Packet
+from aiwolf_nlp_common.protocol.list.talk_list import TalkList
+from aiwolf_nlp_common.protocol.list.whisper_list import WhisperList
 from aiwolf_nlp_common.role import RoleInfo
 
 
@@ -42,8 +42,8 @@ class Agent:
         self.packet: Packet | None = None
         self.info: Info | None = None
         self.setting: Setting | None = None
-        self.talk_history: TalkList | None = None
-        self.whisper_history: WhisperList | None = None
+        self.talk_history: TalkList = TalkList()
+        self.whisper_history: WhisperList = WhisperList()
         self.agent_logger = agent_logger
         self.alive_agents: list[str] = []
         self.running: bool = True
@@ -53,6 +53,9 @@ class Agent:
                 encoding="utf-8",
             ) as f:
                 self.comments = f.read().splitlines()
+        # ---
+        self.reliability: dict[str, float] = {}
+        # ---
 
     @staticmethod
     def timeout(func: Callable) -> Callable:
@@ -142,13 +145,9 @@ class Agent:
     @logging
     def daily_finish(self) -> None:
         if self.packet is not None:
-            if self.talk_history is None:
-                self.talk_history = self.packet.talk_history
-            elif self.packet.talk_history is not None:
+            if self.packet.talk_history is not None:
                 self.talk_history.extend(self.packet.talk_history)
-            if self.whisper_history is None:
-                self.whisper_history = self.packet.whisper_history
-            elif self.packet.whisper_history is not None:
+            if self.packet.whisper_history is not None:
                 self.whisper_history.extend(self.packet.whisper_history)
 
     @timeout
@@ -164,11 +163,8 @@ class Agent:
     @timeout
     @logging
     def talk(self) -> str:
-        if self.packet is not None:
-            if self.talk_history is None:
-                self.talk_history = self.packet.talk_history
-            elif self.packet.talk_history is not None:
-                self.talk_history.extend(self.packet.talk_history)
+        if self.packet is not None and self.packet.talk_history is not None:
+            self.talk_history.extend(self.packet.talk_history)
 
         return random.choice(self.comments)  # noqa: S311
 
@@ -184,11 +180,8 @@ class Agent:
     @timeout
     @logging
     def whisper(self) -> None:
-        if self.packet is not None:
-            if self.whisper_history is None:
-                self.whisper_history = self.packet.whisper_history
-            elif self.packet.whisper_history is not None:
-                self.whisper_history.extend(self.packet.whisper_history)
+        if self.packet is not None and self.packet.whisper_history is not None:
+            self.whisper_history.extend(self.packet.whisper_history)
 
     @logging
     def finish(self) -> None:

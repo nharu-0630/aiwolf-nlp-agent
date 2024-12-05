@@ -11,5 +11,4 @@ class Villager(Agent):
     @Agent.timeout
     @Agent.logging
     def talk(self) -> str:
-        super().talk()
-        return "a"
+        return super().talk()
